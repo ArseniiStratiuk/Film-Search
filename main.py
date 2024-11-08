@@ -17,9 +17,9 @@ def read_file(pathname: str, year: int = 0) -> list[list[str]]:
     """
 
     # had to write this function to test the second one
-    # 
     with open(pathname, "r", encoding="utf-8") as file:
-        return [row.split(";") for row in file.read().split("\n") if row and row[0].isdigit() and int(row.split(";")[6]) >= year]
+        return [row.split(";") for row in file.read().split("\n")
+                if row and row[0].isdigit() and int(row.split(";")[6]) >= year]
 
 def top_n(data: list[list[str]], genre: str = '', n: int = 0) -> list[tuple[str, float]]:
     """
@@ -37,11 +37,30 @@ def top_n(data: list[list[str]], genre: str = '', n: int = 0) -> list[tuple[str,
 ('Mad Max: Fury Road', 8.1), \
 ('Star Wars: Episode VII - The Force Awakens', 8.1)]
 
+    >>> top_n(read_file('films.csv', 2014), genre='Action,Adventure', n=5)
+    [('Dangal', 8.8), \
+('Interstellar', 8.6), \
+('Bahubali: The Beginning', 8.3), \
+('Inside Out', 8.2), \
+('Guardians of the Galaxy', 8.1)]
+
     >>> top_n(read_file('films.csv', 0), genre='', n=4)
     [('The Dark Knight', 9.0), \
 ('Dangal', 8.8), \
 ('Inception', 8.8), \
 ('Interstellar', 8.6)]
+
+    >>> top_n(read_file('films.csv', 0), genre='Thriller,Horror', n=10)
+    [('The Dark Knight Rises', 8.583333333333332), \
+('The Departed', 8.5375), \
+('The Lives of Others', 8.5), \
+('Shutter Island', 8.216666666666667), \
+('The Revenant', 8.175), \
+('The Bourne Ultimatum', 8.149999999999999), \
+('Blood Diamond', 8.1), \
+('No Country for Old Men', 8.1), \
+('Relatos salvajes', 8.1), \
+('The Imitation Game', 8.1)]
 
     >>> len(top_n(read_file('films.csv', 0), genre='', n=0))
     1000
