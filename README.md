@@ -1,2 +1,2 @@
 # Film-Search
-A Python service that returns a list of top-rated movies based on the user's specified genre, year, and quantity.
+A Python code-based service that allows the user to specify the genre, the year, and the number of top rated movies they want to receive and returns to them a list of matching movies ordered by rating in descending order.
