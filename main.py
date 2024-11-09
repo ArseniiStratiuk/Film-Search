@@ -3,9 +3,19 @@ A Python code-based service that allows the user to specify the genre, the year,
 the number of top rated movies they want to receive and returns to them a list of
 matching movies ordered by rating in descending order.
 """
+def compare_rating(movie_rating: tuple[str, float, float]) -> tuple[float, str]:
+    """
+    Comparison function for sorting movies by combined rating and actor rating.
+
+    :param movie_rating: tuple[str, float, float], A tuple containing (Title,
+        Rating, Actor Rating Average).
+    :return: tuple[float, str], Returns a tuple for sorting by average descending
+        rating and then by title alphabetically.
+    """
+    return (-(movie_rating[1] + movie_rating[2]) / 2, movie_rating[0])
 
 
-def read_file(pathname: str, year: int = 0) -> list[list[str]]:
+def read_file(pathname: str, year: int = 0) -> list[list[str]] | None:
     """
     Read data from a CSV file containing movie information,
     starting from the specified year.
@@ -13,13 +23,50 @@ def read_file(pathname: str, year: int = 0) -> list[list[str]]:
     :param pathname: str, The path to the CSV file.
     :param year: int, The starting year for filtering movies. If 0, include all years.
     :return: list[list[str]], A list of lists where each inner list contains details
-        for a single movie.
-    """
+        for a single movie. Return None if the input is not valid.
 
-    # had to write this function to test the second one
-    with open(pathname, "r", encoding="utf-8") as file:
-        return [row.split(";") for row in file.read().split("\n")
-                if row and row[0].isdigit() and int(row.split(";")[6]) >= year]
+    >>> read_file('films.csv', 2014)[:2]
+    [['1', 'Guardians of the Galaxy', 'Action,Adventure,Sci-Fi', \
+'A group of intergalactic criminals are forced to work together to stop \
+a fanatical warrior from taking control of the universe.', 'James Gunn', \
+'Chris Pratt, Vin Diesel, Bradley Cooper, Zoe Saldana', '2014', '121', '8.1', \
+'757074', '333.13', '76.0'], ['3', 'Split', 'Horror,Thriller', \
+'Three girls are kidnapped by a man with a diagnosed 23 distinct personalities. \
+They must try to escape before the apparent emergence of a frightful new 24th.', \
+'M. Night Shyamalan', 'James McAvoy, Anya Taylor-Joy, Haley Lu Richardson, Jessica Sula', \
+'2016', '117', '7.3', '157606', '138.12', '62.0']]
+    """
+    if not (isinstance(pathname, str) and isinstance(year, int)):
+        print("The input is not valid.")
+        return None
+    if year < 0:
+        print('The given year is not valid.')
+        return None
+
+    results = []
+    try:
+        with open(pathname, "r", encoding="utf-8") as file:
+            file.readline()
+            for line in file:
+                line = [i.strip() for i in line.split(';')]
+                film_year = line[6]
+
+                if len(line) != 12:
+                    raise ValueError
+
+                if int(film_year) < year:
+                    continue
+
+                results.append(line)
+    except FileNotFoundError:
+        print(f"File {pathname} not found.")
+        return None
+    except ValueError:
+        print("The data in the input file is not valid.")
+        return None
+
+    return results
+
 
 def top_n(data: list[list[str]], genre: str = '', n: int = 0) -> list[tuple[str, float]]:
     """
@@ -65,29 +112,34 @@ def top_n(data: list[list[str]], genre: str = '', n: int = 0) -> list[tuple[str,
     >>> len(top_n(read_file('films.csv', 0), genre='', n=0))
     1000
     """
+    if not (isinstance(data, list) and isinstance(genre, str) and isinstance(n, int) and n >= 0):
+        print("The input is not valid.")
+        return None
 
-    actors_max = {}
-    for movie in data:
-        for actor in movie[5].split(", "):
-            actors_max[actor] = max(actors_max.get(actor, 0), float(movie[8]))
+    try:
+        actors_max = {}
+        for movie in data:
+            for actor in movie[5].split(", "):
+                actors_max[actor] = max(actors_max.get(actor, 0), float(movie[8]))
 
-    movies_rating = []
-    for movie in data:
-        if not genre or set(genre.split(",")).intersection(set(movie[2].split(","))):
-            actors_values = [actors_max[actor] for actor in movie[5].split(", ")]
-            movies_rating.append((
-                movie[1],
-                float(movie[8]),
-                sum(actors_values) / len(actors_values)
-            ))
-
-    def compare_rating(movie_rating):
-        return (-(movie_rating[1] + movie_rating[2]) / 2, movie_rating[0])
+        movies_rating = []
+        for movie in data:
+            if not genre or set(genre.split(",")).intersection(set(movie[2].split(","))):
+                actors_values = [actors_max[actor] for actor in movie[5].split(", ")]
+                movies_rating.append((
+                    movie[1],
+                    float(movie[8]),
+                    sum(actors_values) / len(actors_values)
+                ))
+    except (IndexError, ZeroDivisionError):
+        print("The input data is not valid.")
+        return None
 
     movies_rating.sort(key=compare_rating)
 
     return [(top_movie[0], (top_movie[1] + top_movie[2]) / 2)
             for top_movie in movies_rating[:n if n else len(movies_rating)]]
+
 
 def write_file(top: list[tuple[str, float]], file_name: str) -> None:
     """
@@ -96,9 +148,37 @@ def write_file(top: list[tuple[str, float]], file_name: str) -> None:
     :param top: list[tuple[str, float]], List of top-rated movies with their ratings.
     :param file_name: str, The name of the output file.
     :return: None
+
+    Each line in the output file contains a movie title and its average rating, 
+    separated by a comma.
+
+    >>> top_movies = [('The Dark Knight', 9.0), ('Inception', 8.8), ('Interstellar', 8.6)]
+    >>> write_file(top_movies, 'top_movies.txt')
+    >>> with open('top_movies.txt', 'r', encoding='utf-8') as file:
+    ...     for line in list(file):
+    ...         print(line.strip())
+    The Dark Knight, 9.0
+    Inception, 8.8
+    Interstellar, 8.6
     """
-    # TODO: Implement function to write top movies to a file, each on a separate line.
-    pass
+    if (not isinstance(top, list) or
+        not all(isinstance(movie, tuple) and len(movie) == 2 for movie in top)):
+        print("The input is not valid.")
+        return
+
+    if not isinstance(file_name, str) or not file_name.endswith('.txt'):
+        print("Invalid file name: The output file must be a .txt file.")
+        return
+
+    try:
+        results = []
+        with open(file_name, 'w', encoding='utf-8') as file:
+            for title, rating in top:
+                results.append(f"{title}, {rating:.1f}")
+
+            _ = file.write('\n'.join(results))
+    except IOError:
+        print(f"Could not write to file {file_name}")
 
 
 if __name__ == "__main__":
