@@ -46,6 +46,20 @@ They must try to escape before the apparent emergence of a frightful new 24th.',
     return movie_data
 
 
+def sort_key(movie):
+    """
+    Key function for sorting movies by average rating descending, and lexicographically by title.
+
+    Args:
+        movie (tuple): A tuple in the form (Title, Rating, Actors_Rating, Average_rating)
+
+    Returns:
+        tuple: A sorting key with negative average rating for descending order and title for
+        lexicographical order.
+    """
+    return (-movie[3], movie[0])
+
+
 def top_n(data: list, genre: str = '', n: int = 0) -> list:
     """
     Selects the top-rated movies filtered by genre and
@@ -117,7 +131,7 @@ def top_n(data: list, genre: str = '', n: int = 0) -> list:
                 continue
 
     # Sort by average rating descending, then by title lexicographically
-    filtered_movies.sort(key=lambda x: (-x[3], x[0]))
+    filtered_movies.sort(key=sort_key)
 
     # Return top n or all if n is 0
     result = [(title, avg_rating) for title, _, _, avg_rating in filtered_movies]
