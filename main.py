@@ -181,10 +181,31 @@ def write_file(top: list[tuple[str, float]], file_name: str) -> None:
         print(f"Could not write to file {file_name}")
 
 
-if __name__ == "__main__":
-    import doctest
-    print(doctest.testmod())
+def main():
+    """
+    Main service function to provide top-rated movies based on user input.
+    Provides user input prompts and calls the necessary functions to get the results.
+    """
+    print("Welcome to the Top Rated Movies service!")
+    file_path = input("Enter the path to the CSV file with movie data: ")
+    year = int(input("Enter the starting year for filtering movies (0 for all years): "))
+    genre = input("Enter the genre(s) to filter by (separate by commas for multiple genres): ")
+    n = int(input("Enter the number of top-rated movies to return (0 for all movies): "))
 
-    movies_data = read_file('films.csv', 2014)
-    top_movies = top_n(movies_data, genre='Action', n=5)
-    write_file(top_movies, 'top_movies.txt')
+    movies_data = read_file(file_path, year)
+    if movies_data:
+        top_movies = top_n(movies_data, genre, n)
+        if top_movies:
+            write_file(top_movies, 'top_movies.txt')
+            print("The top-rated movies have been written to 'top_movies.txt'.")
+        else:
+            print("No movies found for the given criteria.")
+    else:
+        print("No valid data found for the given input.")
+
+
+if __name__ == "__main__":
+    # import doctest
+    # print(doctest.testmod())
+
+    main()
