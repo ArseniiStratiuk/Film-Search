@@ -188,9 +188,15 @@ def main():
     """
     print("Welcome to the Top Rated Movies service!")
     file_path = input("Enter the path to the CSV file with movie data: ")
-    year = int(input("Enter the starting year for filtering movies (0 for all years): "))
+    try:
+        year = int(input("Enter the starting year for filtering movies (0 for all years): "))
+    except ValueError:
+        year = 0
     genre = input("Enter the genre(s) to filter by (separate by commas for multiple genres): ")
-    n = int(input("Enter the number of top-rated movies to return (0 for all movies): "))
+    try:
+        n = int(input("Enter the number of top-rated movies to return (0 for all movies): "))
+    except ValueError:
+        n = 0
 
     movies_data = read_file(file_path, year)
     if movies_data:
